@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -8,8 +9,15 @@ public class Enemy : MonoBehaviour
     public GameObject target;
     public UnityEvent<Enemy> onClick;
     public UnityEvent onDie;
+    public UnityEvent onBeKilled;
 
     public float speed = 1f;
+    public int maxhealth=3;
+
+    int health;
+
+    public TextMeshProUGUI hpText;
+
 
     Vector2 direction;
     
@@ -17,6 +25,7 @@ public class Enemy : MonoBehaviour
 
     private void Start()
     {
+        health = maxhealth;
         randomPositionAtEdge();
 
         sr = GetComponent<SpriteRenderer>();
@@ -58,13 +67,30 @@ public class Enemy : MonoBehaviour
         transform.Translate(direction*speed*Time.deltaTime);
         if(Vector3.Distance(transform.position, Vector3.zero) < 2f)
         {
-            onDie.Invoke();
-            Destroy(gameObject);
+            Die();
         }
         
     }
     public void loseTarget()
     {
         target.SetActive(false);
+    }
+
+    public void takeDamage()
+    {
+        int damage = 1;
+        health -= damage;
+        hpText.text = "HP:" + health;
+        if(health <= 0)
+        {
+            Die();
+            onBeKilled.Invoke();
+        }
+    }
+
+    void Die()
+    {
+        onDie.Invoke();
+        Destroy(gameObject);
     }
 }

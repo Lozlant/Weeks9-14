@@ -6,6 +6,7 @@ public class Spanwer : MonoBehaviour
 {
     public GameObject enemyPrefab;
     public Tank tank;
+    public Score score;
     public float enemySpawnInterval;
 
     void Start()
@@ -38,5 +39,6 @@ public class Spanwer : MonoBehaviour
         Enemy enemy = Instantiate(enemyPrefab).GetComponent<Enemy>();
         enemy.onClick.AddListener(tank.pointToTaret);
         enemy.onDie.AddListener(tank.enemyDie);
+        enemy.onBeKilled.AddListener(score.killEnemy);
     }
 }
