@@ -653,7 +653,8 @@ MonoBehaviour:
   laser: {fileID: 2015424160}
   laserDamageInterval: 0.2
   upgradeTime: 5
-  timer: 0
+  upgradeSpeedAdd: 40
+  upgradeColor: {r: 1, g: 0, b: 0.7106805, a: 1}
 --- !u!212 &934925405
 SpriteRenderer:
   m_ObjectHideFlags: 0

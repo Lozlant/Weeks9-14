@@ -14,12 +14,7 @@ public class Spanwer : MonoBehaviour
        StartCoroutine(startSpawnEnemy());
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
+    //spawn enemy per interval
     IEnumerator startSpawnEnemy()
     {
         float time = enemySpawnInterval;
@@ -34,6 +29,7 @@ public class Spanwer : MonoBehaviour
             yield return null;
         }
     }
+    //spawn enemy
     void spawnEnemy()
     {
         Enemy enemy = Instantiate(enemyPrefab).GetComponent<Enemy>();

@@ -30,32 +30,29 @@ public class Tank : MonoBehaviour
     Color basecolor;
     public Color upgradeColor;
 
-    // Start is called before the first frame update
     void Start()
     {
         transform.position=Vector3.zero;
         basecolor = GetComponent<SpriteRenderer>().color;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
+    //would call when Onclick raised
     public void pointToTaret(Enemy enemy)
     {
-        if(enemy == this.enemy)return;
+        //subscribe the new enemy, remove the last one
+        if (enemy == this.enemy)return;
         if(this.enemy!=null)
         {
             this.enemy.loseTarget();
             this.enemy.onDie.RemoveListener(enemyDie);
             onAttack.RemoveListener(enemy.takeDamage);
         }
-        if(enemy == null) return;
+        else return;
         this.enemy = enemy;
         onAttack.AddListener(enemy.takeDamage);
 
+        //caculate the rotate
         Vector3 target =enemy.transform.position;
         Vector3 direction = target-gun.transform.position;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
@@ -67,12 +64,11 @@ public class Tank : MonoBehaviour
         }
         stopAttack();
 
+        //start rotate process
         rotating =StartCoroutine(rotateToTarget(angle));
-
-        
-        //gun.transform.rotation = Quaternion.Euler(0, 0, angle);
     }
 
+    // a methods to stop all kind of attack
     void stopAttack()
     {
         if (shooting != null)
@@ -85,12 +81,14 @@ public class Tank : MonoBehaviour
             laser.positionCount = 0;
         }
     }
+    //a rotate progress, gun to target
     IEnumerator rotateToTarget(float target)
     {
         target=setAngle(target);
         float startAngle = setAngle(gun.rotation.eulerAngles.z);
         float rotateAngle = setAngle(target - startAngle);
 
+        // choose the closer direction
         int direction = rotateAngle < 0? -1 : 1;
 
         float hasroate = 0;
@@ -102,6 +100,8 @@ public class Tank : MonoBehaviour
         }
 
         gun.transform.rotation = Quaternion.Euler(0, 0, startAngle + rotateAngle);
+
+        //start attack
         if(enemy!=null)
         {
             if (isUpgrade)
@@ -116,15 +116,18 @@ public class Tank : MonoBehaviour
         
     }
 
-    //使得angle的角度统一在-180-180
+    //Makes the angles of angle uniform at -180 to 180
     float setAngle(float angle)
     {
         if (angle > 180) angle -= 360;
         if (angle < -180) angle += 360;
         return angle;
     }
+
+    //missle spawn per interval time
     IEnumerator startSpawnMissle()
     {
+        //spawn at start
         float time = missleSpawnInterval;
         while (true)
         {
@@ -141,6 +144,7 @@ public class Tank : MonoBehaviour
     {
         if(enemy==null) return;
         GameObject missle = Instantiate(missePrefab,missleSpawnPoint.position,gun.rotation);
+        //every missle has its own flying process
         StartCoroutine(missleflying(missle.transform));
         
     }
@@ -149,9 +153,12 @@ public class Tank : MonoBehaviour
         float time = 0;
         Enemy target = enemy;
         SpriteRenderer enemysr = target.GetComponent<SpriteRenderer>();
+
+        //missle won't stop or lose althought it lose target
         while (target == null || !enemysr.bounds.Contains(missle.position))
         {
             time += Time.deltaTime;
+            //if flying for a long time,destroy!
             if (time >= 10f)
             {
                 Destroy(missle.gameObject);
@@ -160,40 +167,51 @@ public class Tank : MonoBehaviour
             missle.transform.Translate(missleSpeed*transform.right*Time.deltaTime);
             yield return null;
         }
+
+        //here missle reach the target, raise the onAttack to make enemy take the damage
         if (target != null) onAttack.Invoke();
         Destroy(missle.gameObject);
     }
 
+    //if enemyDie(enemy's onDie event raise),stop the attack and reset the record enemy
     public void enemyDie()
     {
         stopAttack();
         enemy=null;
     }
 
+    //if score raise the onUpgrade event,call this
     public void Upgrade()
     {
         stopAttack();
-        isUpgrade=true;
+        //set the status record variable
+        isUpgrade = true;
+        //recall the click methods to renew the attackway
         pointToTaret(enemy);
 
+        //call a timer corotine to stop the upgrade after certain time
         if(upgrading!=null)
         {
             StopCoroutine(upgrading);
         }
         upgrading=StartCoroutine(upgradeTimer());
+
+        //change the tank color when upgrade starting
         GetComponent<SpriteRenderer>().color=upgradeColor;
-        speed += upgradeSpeedAdd;
+        speed += upgradeSpeedAdd;//and add the rotateSpeed
     }
 
+    //the laser atack
     IEnumerator laserAttack()
     {
-        //if (enemy == null) StopCoroutine(lasering);
+        //show the laser between gun and enemy
         laser.positionCount = 2;
         laser.SetPosition(0, missleSpawnPoint.position);
         laser.SetPosition(1, enemy.transform.position);
 
+        //take damage interval
         float time = laserDamageInterval;
-        while(isUpgrade)
+        while(isUpgrade)//if is not in upgrade state, the attack will stop
         {
             time += Time.deltaTime;
             if(time >= laserDamageInterval)
@@ -204,6 +222,8 @@ public class Tank : MonoBehaviour
             yield return null;
         }
     }
+
+    //timer to finish the upgrade state after certain time 
     IEnumerator upgradeTimer()
     {
         float time = 0;
@@ -213,8 +233,11 @@ public class Tank : MonoBehaviour
             yield return null;
         }
         isUpgrade = false;
+        //reset the tank variable's 
         GetComponent<SpriteRenderer>().color = basecolor;
         speed -= upgradeSpeedAdd;
+
+        //recall the click methods to renew the attackway
         pointToTaret(enemy);
     }
 
